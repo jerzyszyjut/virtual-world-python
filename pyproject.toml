@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "virtual-world-python"
+version = "0.1.0"
+description = ""
+authors = ["Jerzy Szyjut <jerzy.szyjut@outlook.com>"]
+readme = "README.md"
+packages = [{include = "virtual_world_python"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
