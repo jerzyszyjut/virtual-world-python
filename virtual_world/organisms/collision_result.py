@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class CollisionResult(Enum):
-    VICTORY = (0,)
-    DEFEAT = (1,)
-    TIE = (2,)
-    ESCAPE = 3
+    VICTORY: int = 0
+    DEFEAT: int = 1
+    TIE: int = 2
+    ESCAPE: int = 3

@@ -6,7 +6,9 @@ class Position:
         self.__x = x
         self.__y = y
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Position):
+            return NotImplemented
         return self.__x == other.__x and self.__y == other.__y
 
     def __str__(self) -> str:
@@ -18,10 +20,10 @@ class Position:
     def __hash__(self) -> int:
         return hash((self.__x, self.__y))
 
-    def __getitem__(self, item) -> int:
+    def __getitem__(self, item: int) -> int:
         return (self.__x, self.__y)[item]
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(self, key: int, value: int) -> None:
         if key == 0:
             self.__x = value
         elif key == 1:

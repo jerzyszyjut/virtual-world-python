@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union, TypedDict
 
 from virtual_world.organisms.collision_result import CollisionResult
 from virtual_world.organisms.direction import Direction
@@ -30,13 +30,13 @@ class Organism:
     ) -> CollisionResult:
         if not is_attacked:
             collision_result = attacker.collision(self, True)
-            if self.is_stronger(attacker) and collision_result in (
+            if self.is_stronger(attacker) and collision_result in (  # type: ignore # comparison-overlap
                 collision_result.TIE,
                 collision_result.ESCAPE,
             ):
-                if collision_result == collision_result.TIE:
+                if collision_result == collision_result.TIE:  # type: ignore # comparison-overlap
                     self.__world.add_log(f"{self} and {attacker} tied a fight")
-                elif collision_result == collision_result.ESCAPE:
+                elif collision_result == collision_result.ESCAPE:  # type: ignore # comparison-overlap
                     self.__world.add_log(f"{self} escaped from {attacker}")
                 return collision_result
         if self.is_stronger(attacker, is_attacked):
@@ -91,7 +91,15 @@ class Organism:
     def get_color(self) -> Tuple[int, int, int]:
         return self.__color
 
-    def __dict__(self):
+    class OrganismRepresentation(TypedDict):
+        strength: int
+        initiative: int
+        age: int
+        position: Position
+        alive: bool
+        color: Tuple[int, int, int]
+
+    def __dict__(self) -> OrganismRepresentation:  # type: ignore # override
         return {
             "strength": self.__strength,
             "initiative": self.__initiative,
@@ -101,7 +109,7 @@ class Organism:
             "color": self.__color,
         }
 
-    def set_from_dict(self, data: dict):
+    def set_from_dict(self, data: OrganismRepresentation) -> None:
         self.__strength = data["strength"]
         self.__initiative = data["initiative"]
         self.__age = data["age"]
