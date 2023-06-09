@@ -108,19 +108,26 @@ class World:
         organism.set_position(position)
 
     def get_random_adjacent_position(
-        self, position: PositionSquare | PositionHexagon
+        self, position: PositionSquare | PositionHexagon, empty: bool = False
     ) -> PositionSquare | PositionHexagon:
         if self.__type == World.WorldType.SQUARE and isinstance(
             position, PositionSquare
         ):
-            return random.choice(
-                [
-                    PositionSquare(position.get_x(), position.get_y() - 1),
-                    PositionSquare(position.get_x(), position.get_y() + 1),
-                    PositionSquare(position.get_x() - 1, position.get_y()),
-                    PositionSquare(position.get_x() + 1, position.get_y()),
+            choices = [
+                PositionSquare(position.get_x(), position.get_y() - 1),
+                PositionSquare(position.get_x(), position.get_y() + 1),
+                PositionSquare(position.get_x() - 1, position.get_y()),
+                PositionSquare(position.get_x() + 1, position.get_y()),
+            ]
+
+            if empty:
+                choices = [
+                    choice
+                    for choice in choices
+                    if self.get_organism_at_position(choice) is None
                 ]
-            )
+
+            return random.choice(choices)
         else:
             raise NotImplementedError
 
