@@ -2,7 +2,7 @@ from typing import Tuple, Union, TypedDict
 
 from virtual_world.organisms.collision_result import CollisionResult
 from virtual_world.organisms.direction import Direction
-from virtual_world.organisms.position import Position
+from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 
 class Organism:
@@ -11,14 +11,13 @@ class Organism:
     __strength: int
     __initiative: int
     __age: int
-    __position: Position
+    __position: PositionSquare | PositionHexagon
     __alive: bool
     __world: World
     __color: Tuple[int, int, int]
 
-    def __init__(self, position: Position, world: World) -> None:
+    def __init__(self, position: PositionSquare | PositionHexagon) -> None:
         self.__position = position
-        self.__world = world
         self.__alive = True
         self.__age = 0
 
@@ -70,10 +69,10 @@ class Organism:
     def increase_strength(self, strength: int) -> None:
         self.__strength += strength
 
-    def get_position(self) -> Position:
+    def get_position(self) -> PositionSquare | PositionHexagon:
         return self.__position
 
-    def set_position(self, position: Position) -> None:
+    def set_position(self, position: PositionSquare | PositionHexagon) -> None:
         self.__position = position
 
     def get_age(self) -> int:
@@ -91,11 +90,17 @@ class Organism:
     def get_color(self) -> Tuple[int, int, int]:
         return self.__color
 
+    def set_world(self, world: "World") -> None:
+        self.__world = world
+
+    def get_world(self) -> "World":
+        return self.__world
+
     class OrganismRepresentation(TypedDict):
         strength: int
         initiative: int
         age: int
-        position: Position
+        position: PositionSquare | PositionHexagon
         alive: bool
         color: Tuple[int, int, int]
 
