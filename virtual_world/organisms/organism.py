@@ -1,7 +1,11 @@
 from typing import Tuple, Union, TypedDict
 
 from virtual_world.organisms.collision_result import CollisionResult
-from virtual_world.organisms.direction import Direction
+from virtual_world.organisms.direction import (
+    Direction,
+    DirectionSquare,
+    DirectionHexagon,
+)
 from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 
@@ -10,11 +14,11 @@ class Organism:
 
     _strength: int
     _initiative: int
-    _age: int
-    _position: PositionSquare | PositionHexagon
-    _alive: bool
-    _world: World
     _color: Tuple[int, int, int]
+    _age: int = 0
+    _position: PositionSquare | PositionHexagon
+    _alive: bool = True
+    _world: World
 
     def __init__(self, position: PositionSquare | PositionHexagon) -> None:
         self._position = position
@@ -25,30 +29,36 @@ class Organism:
         pass
 
     def collision(
-        self, attacker: "Organism", is_attacked: bool = False
+        self, other: "Organism", is_attacked: bool = False
     ) -> CollisionResult:
         if not is_attacked:
-            collision_result = attacker.collision(self, True)
-            if self.is_stronger(attacker) and collision_result in (  # type: ignore # comparison-overlap
+            collision_result = other.collision(self, True)
+            if self.is_stronger(other) and collision_result in (  # type: ignore # comparison-overlap
                 collision_result.TIE,
                 collision_result.ESCAPE,
             ):
                 if collision_result == collision_result.TIE:  # type: ignore # comparison-overlap
-                    self._world.add_log(f"{self} and {attacker} tied a fight")
+                    self._world.add_log(f"{self} and {other} tied a fight")
                 elif collision_result == collision_result.ESCAPE:  # type: ignore # comparison-overlap
-                    self._world.add_log(f"{self} escaped from {attacker}")
+                    self._world.add_log(f"{self} escaped from {other}")
                 return collision_result
-        if self.is_stronger(attacker, is_attacked):
-            self._world.add_log(
-                f"{self} killed {attacker} at {attacker.get_position()}"
-            )
+        if self.is_stronger(other, is_attacked):
+            self._world.add_log(f"{self} killed {other} at {other.get_position()}")
             return CollisionResult.VICTORY
         else:
             if not is_attacked:
                 self._world.add_log(
-                    f"{attacker} was killed by {self} at {self.get_position()}"
+                    f"{other} was killed by {self} at {self.get_position()}"
                 )
             return CollisionResult.DEFEAT
+
+    def get_possible_directions(self) -> list[Direction]:
+        if self._position.__class__.__name__ == "PositionSquare":
+            return list(DirectionSquare)
+        elif self._position.__class__.__name__ == "PositionHexagon":
+            return list(DirectionHexagon)
+        else:
+            raise NotImplementedError
 
     def is_stronger(self, other: "Organism", is_attacked: bool = True) -> bool:
         if is_attacked:

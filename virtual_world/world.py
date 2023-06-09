@@ -38,7 +38,13 @@ class World:
         self.__type = type
 
     def add_entity(self, entity: Organism) -> None:
-        self.__entities.append(entity)
+        if (
+            not self.get_entity(entity.get_position())
+            and entity.is_alive()
+            and (self.is_position_in_world(entity.get_position()))
+        ):
+            entity.set_world(self)
+            self.__entities.append(entity)
 
     def remove_entity(self, entity: Organism) -> None:
         self.__entities.remove(entity)
@@ -101,11 +107,11 @@ class World:
                 return entity
         return None
 
-    @staticmethod
     def move_organism(
-        organism: Organism, position: PositionSquare | PositionHexagon
+        self, organism: Organism, position: PositionSquare | PositionHexagon
     ) -> None:
-        organism.set_position(position)
+        if self.is_position_in_world(position):
+            organism.set_position(position)
 
     def get_random_adjacent_position(
         self, position: PositionSquare | PositionHexagon, empty: bool = False
@@ -128,6 +134,23 @@ class World:
                 ]
 
             return random.choice(choices)
+        else:
+            raise NotImplementedError
+
+    def get_all_neighbours(
+        self, position: PositionSquare | PositionHexagon
+    ) -> list[Organism]:
+        if self.__type == World.WorldType.SQUARE and isinstance(
+            position, PositionSquare
+        ):
+            neighbours = []
+            for direction in DirectionSquare:
+                neighbour = self.get_organism_at_position(
+                    self.get_position_in_direction(position, direction)
+                )
+                if neighbour is not None:
+                    neighbours.append(neighbour)
+            return neighbours
         else:
             raise NotImplementedError
 

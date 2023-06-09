@@ -36,7 +36,7 @@ class Config:
     HERACLEUM_SOSNOWSKYI_COLOR: Tuple[int, int, int] = (255, 255, 255)
 
     TURTLE_MOVE_CHANCE: float = 0.10
-    TURTLE_REFLECTION_CHANCE: float = 0.25
+    TURTLE_REFLECTION_STRENGTH: int = 5
     ANTELOPE_MOVE_RANGE: int = 2
     ANTELOPE_ESCAPE_CHANCE: float = 0.5
     PLANT_SPREAD_CHANCE: float = 0.1
