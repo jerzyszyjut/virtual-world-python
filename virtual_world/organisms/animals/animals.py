@@ -178,6 +178,10 @@ class Antelope(Animal):
 
 
 class CyberSheep(Animal):
+    _strength = Config.CYBER_SHEEP_STRENGTH
+    _initiative = Config.CYBER_SHEEP_INITIATIVE
+    _color = Config.CYBER_SHEEP_COLOR
+
     def action(
         self, direction: Optional[DirectionSquare | DirectionHexagon] = None
     ) -> None:

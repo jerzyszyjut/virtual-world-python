@@ -15,7 +15,6 @@ from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 class World:
     import virtual_world.organisms.organism as organism
-    import virtual_world.organisms.animals.animals as animals
 
     class WorldType(Enum):
         SQUARE = 0
@@ -27,7 +26,7 @@ class World:
     __width: int
     __height: int
     __type: WorldType
-    __player: Optional["animals.Human"] = None
+    __player: Optional["animals.Human"] = None  # type: ignore # name-defined
 
     def __init__(
         self,
