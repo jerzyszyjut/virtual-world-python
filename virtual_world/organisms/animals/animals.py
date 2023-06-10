@@ -2,13 +2,18 @@ import random
 
 from virtual_world.config import Config
 from virtual_world.organisms.collision_result import CollisionResult
-from virtual_world.organisms.direction import Direction
+from virtual_world.organisms.direction import DirectionSquare, DirectionHexagon
 from virtual_world.organisms.organism import Organism
 
 
 class Animal(Organism):
-    def action(self, direction: Direction = Direction.NONE) -> None:
-        if direction == Direction.NONE:
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
+        if (
+            isinstance(direction, DirectionSquare) and direction == DirectionSquare.NONE
+        ) or (
+            isinstance(direction, DirectionHexagon)
+            and direction == DirectionHexagon.NONE
+        ):
             direction = self._world.get_random_direction()
 
         new_position = self._world.get_position_in_direction(self._position, direction)
@@ -56,7 +61,7 @@ class Turtle(Animal):
     _initiative = Config.TURTLE_INITIATIVE
     _color = Config.TURTLE_COLOR
 
-    def action(self, direction: Direction = Direction.NONE) -> None:
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
         if random.random() < Config.TURTLE_MOVE_CHANCE:
             super().action(direction)
         self._world.add_log(f"{self} is too lazy to move")
@@ -76,9 +81,12 @@ class Fox(Animal):
     _initiative = Config.FOX_INITIATIVE
     _color = Config.FOX_COLOR
 
-    def action(self, direction: Direction = Direction.NONE) -> None:
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
         possible_directions = self.get_possible_directions()
-        possible_directions.remove(Direction.NONE)
+        if isinstance(direction, DirectionSquare):
+            possible_directions.remove(DirectionSquare.NONE)
+        elif isinstance(direction, DirectionHexagon):
+            possible_directions.remove(DirectionHexagon.NONE)
 
         possible_directions = list(
             filter(
@@ -107,7 +115,7 @@ class Human(Animal):
         self._special_ability_active = True
         self._world.add_log(f"{self} used special ability")
 
-    def action(self, direction: Direction = Direction.NONE) -> None:
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
         self.perform_special_ability()
 
         if self._special_ability_active:
@@ -144,7 +152,7 @@ class Antelope(Animal):
     _initiative = Config.ANTELOPE_INITIATIVE
     _color = Config.ANTELOPE_COLOR
 
-    def action(self, direction: Direction = Direction.NONE) -> None:
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
         for i in range(Config.ANTELOPE_MOVE_RANGE):
             super().action(direction)
 
@@ -163,4 +171,29 @@ class Antelope(Animal):
         return super().collision(other, is_attacked)
 
 
-# TODO: Implement CyberSheep
+class CyberSheep(Animal):
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
+        from virtual_world.organisms.plants.plants import HeracleumSosnowskyi
+
+        closest_heracleum_sosnowskyi = self._world.get_closest_organism_of_type(
+            self.get_position(), HeracleumSosnowskyi
+        )
+        if closest_heracleum_sosnowskyi is None:
+            super().action(direction)
+        else:
+            self._world.add_log(f"{self} is going to {closest_heracleum_sosnowskyi}")
+            direction = self._world.get_direction_to_position(
+                self._position, closest_heracleum_sosnowskyi.get_position()
+            )
+            super().action(direction)
+
+    def collision(
+        self, other: "Organism", is_attacked: bool = False
+    ) -> CollisionResult:
+        from virtual_world.organisms.plants.plants import HeracleumSosnowskyi
+
+        if isinstance(other, HeracleumSosnowskyi):
+            self._world.add_log(f"{self} ate {other}")
+            other.die()
+            return CollisionResult.VICTORY
+        return super().collision(other, is_attacked)

@@ -1,23 +1,23 @@
 import random
 from enum import Enum
-from typing import Optional
+from typing import Optional, Type
 
 from virtual_world.config import Config
 from virtual_world.organisms.direction import (
-    Direction,
     DirectionSquare,
     DirectionHexagon,
 )
-from virtual_world.organisms.organism import Organism
 from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 
 class World:
+    import virtual_world.organisms.organism as organism
+
     class WorldType(Enum):
         SQUARE = 0
         HEXAGONAL = 1
 
-    __entities: list[Organism]
+    __entities: list["organism.Organism"]
     __logs: list[str]
     __turn: int
     __width: int
@@ -28,16 +28,16 @@ class World:
         self,
         width: int = Config.WORLD_WIDTH,
         height: int = Config.WORLD_HEIGHT,
-        type: WorldType = WorldType.SQUARE,
+        world_type: WorldType = WorldType.SQUARE,
     ) -> None:
         self.__entities = []
         self.__logs = []
         self.__turn = 0
         self.__width = width
         self.__height = height
-        self.__type = type
+        self.__type = world_type
 
-    def add_entity(self, entity: Organism) -> None:
+    def add_entity(self, entity: "organism.Organism") -> None:
         if (
             not self.get_entity(entity.get_position())
             and entity.is_alive()
@@ -46,12 +46,12 @@ class World:
             entity.set_world(self)
             self.__entities.append(entity)
 
-    def remove_entity(self, entity: Organism) -> None:
+    def remove_entity(self, entity: "organism.Organism") -> None:
         self.__entities.remove(entity)
 
     def get_entity(
         self, position: PositionSquare | PositionHexagon
-    ) -> Optional[Organism]:
+    ) -> Optional["organism.Organism"]:
         for entity in self.__entities:
             if entity.get_position() == position:
                 return entity
@@ -70,7 +70,9 @@ class World:
             raise NotImplementedError
 
     def get_position_in_direction(
-        self, position: PositionSquare | PositionHexagon, direction: Direction
+        self,
+        position: PositionSquare | PositionHexagon,
+        direction: DirectionSquare | DirectionHexagon,
     ) -> PositionSquare | PositionHexagon:
         if self.__type == World.WorldType.SQUARE and isinstance(
             position, PositionSquare
@@ -101,14 +103,14 @@ class World:
 
     def get_organism_at_position(
         self, position: PositionSquare | PositionHexagon
-    ) -> Optional[Organism]:
+    ) -> Optional["organism.Organism"]:
         for entity in self.__entities:
             if entity.get_position() == position:
                 return entity
         return None
 
     def move_organism(
-        self, organism: Organism, position: PositionSquare | PositionHexagon
+        self, organism: "organism.Organism", position: PositionSquare | PositionHexagon
     ) -> None:
         if self.is_position_in_world(position):
             organism.set_position(position)
@@ -139,7 +141,7 @@ class World:
 
     def get_all_neighbours(
         self, position: PositionSquare | PositionHexagon
-    ) -> list[Organism]:
+    ) -> list["organism.Organism"]:
         if self.__type == World.WorldType.SQUARE and isinstance(
             position, PositionSquare
         ):
@@ -151,6 +153,51 @@ class World:
                 if neighbour is not None:
                     neighbours.append(neighbour)
             return neighbours
+        else:
+            raise NotImplementedError
+
+    def get_closest_organism_of_type(
+        self,
+        position: PositionSquare | PositionHexagon,
+        organism_type: Type["organism.Organism"],
+    ) -> Optional["organism.Organism"]:
+        if self.__type == World.WorldType.SQUARE and isinstance(
+            position, PositionSquare
+        ):
+            closest = None
+            closest_distance = None
+            for entity in self.__entities:
+                if isinstance(entity, organism_type):
+                    entity_position = entity.get_position()
+                    if isinstance(entity_position, PositionSquare):
+                        distance = position.get_distance(entity_position)
+                        if closest is None or distance < closest_distance:
+                            closest = entity
+                            closest_distance = distance
+            return closest
+        else:
+            raise NotImplementedError
+
+    def get_direction_to_position(
+        self,
+        position: PositionSquare | PositionHexagon,
+        target_position: PositionSquare | PositionHexagon,
+    ) -> DirectionSquare | DirectionHexagon:
+        if (
+            self.__type == World.WorldType.SQUARE
+            and isinstance(position, PositionSquare)
+            and isinstance(target_position, PositionSquare)
+        ):
+            if position.get_x() < target_position.get_x():
+                return DirectionSquare.RIGHT
+            elif position.get_x() > target_position.get_x():
+                return DirectionSquare.LEFT
+            elif position.get_y() < target_position.get_y():
+                return DirectionSquare.DOWN
+            elif position.get_y() > target_position.get_y():
+                return DirectionSquare.UP
+            else:
+                raise NotImplementedError
         else:
             raise NotImplementedError
 

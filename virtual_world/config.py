@@ -23,6 +23,9 @@ class Config:
     ANTELOPE_STRENGTH: int = 4
     ANTELOPE_INITIATIVE: int = 4
     ANTELOPE_COLOR: Tuple[int, int, int] = (255, 0, 255)
+    CYBER_SHEEP_STRENGTH: int = 11
+    CYBER_SHEEP_INITIATIVE: int = 4
+    CYBER_SHEEP_COLOR: Tuple[int, int, int] = (0, 255, 255)
     PLANT_INITIATIVE: int = 0
     GRASS_STRENGTH: int = 0
     GRASS_COLOR: Tuple[int, int, int] = (0, 255, 255)

@@ -54,6 +54,9 @@ class PositionSquare:
         self.__x = position.get_x()
         self.__y = position.get_y()
 
+    def get_distance(self, position: "PositionSquare") -> int:
+        return abs(self.__x - position.get_x()) + abs(self.__y - position.get_y())
+
 
 class PositionHexagon:
     __q: int
@@ -135,3 +138,10 @@ class PositionHexagon:
 
     def get_axial(self) -> tuple[int, int]:
         return self.__q, self.__r
+
+    def get_distance(self, position: "PositionHexagon") -> int:
+        return max(
+            abs(self.__q - position.get_q()),
+            abs(self.__r - position.get_r()),
+            abs(self.__s - position.get_s()),
+        )

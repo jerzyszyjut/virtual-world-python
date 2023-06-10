@@ -1,15 +1,15 @@
+from abc import ABC
 from typing import Tuple, Union, TypedDict
 
 from virtual_world.organisms.collision_result import CollisionResult
 from virtual_world.organisms.direction import (
-    Direction,
     DirectionSquare,
     DirectionHexagon,
 )
 from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 
-class Organism:
+class Organism(ABC):
     from virtual_world.world import World
 
     _strength: int
@@ -25,7 +25,7 @@ class Organism:
         self._alive = True
         self._age = 0
 
-    def action(self, direction: Direction = Direction.NONE) -> None:
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
         pass
 
     def collision(
@@ -52,7 +52,7 @@ class Organism:
                 )
             return CollisionResult.DEFEAT
 
-    def get_possible_directions(self) -> list[Direction]:
+    def get_possible_directions(self) -> list[DirectionSquare | DirectionHexagon]:
         if self._position.__class__.__name__ == "PositionSquare":
             return list(DirectionSquare)
         elif self._position.__class__.__name__ == "PositionHexagon":
