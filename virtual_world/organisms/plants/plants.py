@@ -22,6 +22,38 @@ class Plant(Organism):
         return CollisionResult.DEFEAT
 
 
+class Grass(Plant):
+    _strength = Config.GRASS_STRENGTH
+    _color = Config.GRASS_COLOR
+
+
+class Dandelion(Plant):
+    _strength = Config.DANDELION_STRENGTH
+    _color = Config.DANDELION_COLOR
+
+    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
+        for _ in range(Config.DANDELION_SPREAD_TRIES):
+            super().action(direction)
+
+
+class Guarana(Plant):
+    _strength = Config.GUARANA_STRENGTH
+    _color = Config.GUARANA_COLOR
+
+    def collision(self, other: Organism, is_attacked: bool = False) -> CollisionResult:
+        other.increase_strength(Config.GUARANA_STRENGTH_BOOST)
+        return super().collision(other, is_attacked)
+
+
+class Belladonna(Plant):
+    _strength = Config.BELLADONNA_STRENGTH
+    _color = Config.BELLADONNA_COLOR
+
+    def collision(self, other: Organism, is_attacked: bool = False) -> CollisionResult:
+        other.die()
+        return super().collision(other, is_attacked)
+
+
 class HeracleumSosnowskyi(Plant):
     _strength = Config.HERACLEUM_SOSNOWSKYI_STRENGTH
     _color = Config.HERACLEUM_SOSNOWSKYI_COLOR
