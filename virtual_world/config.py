@@ -2,8 +2,8 @@ from typing import Tuple
 
 
 class Config:
-    WORLD_WIDTH: int = 20
-    WORLD_HEIGHT: int = 20
+    WORLD_WIDTH: int = 40
+    WORLD_HEIGHT: int = 40
 
     HUMAN_STRENGTH: int = 5
     HUMAN_INITIATIVE: int = 4

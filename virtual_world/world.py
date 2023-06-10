@@ -4,6 +4,7 @@ import random
 from enum import Enum
 from typing import Optional, Type
 
+import virtual_world
 from virtual_world.config import Config
 from virtual_world.organisms.direction import (
     DirectionSquare,
@@ -26,7 +27,7 @@ class World:
     __width: int
     __height: int
     __type: WorldType
-    __player: Optional["animals.Human"] = None  # type: ignore # name-defined
+    __player: Optional["virtual_world.organisms.animals.animals.Human"] = None
 
     def __init__(
         self,
@@ -173,6 +174,8 @@ class World:
         ):
             neighbours = []
             for direction in DirectionSquare:
+                if direction == DirectionSquare.NONE:
+                    continue
                 neighbour = self.get_organism_at_position(
                     self.get_position_in_direction(position, direction)
                 )
@@ -227,6 +230,17 @@ class World:
         else:
             raise NotImplementedError
 
+    def move_player(self, direction: DirectionSquare | DirectionHexagon) -> None:
+        if self.__player is not None:
+            self.__player.action(direction)
+
+    def use_player_ability(self) -> None:
+        if self.__player is not None:
+            self.__player.use_special_ability()
+
+    def get_player(self) -> Optional["virtual_world.organisms.animals.animals.Human"]:
+        return self.__player
+
     def __dict__(self) -> dict:  # type: ignore # override
         from virtual_world.organisms.animals.animals import Human
 
@@ -254,13 +268,13 @@ class World:
             self.__turn = data["turn"]
             self.__width = data["width"]
             self.__height = data["height"]
+            self.__entities = []
             if data["player"] is not None:
                 self.__player = Human()
                 self.__player.set_from_dict(data["player"])
                 self.add_entity(self.__player)
             else:
                 self.__player = None
-            self.__entities = []
             for entity_data in data["entities"]:
                 entity = OrganismFactory.create(entity_data)
                 self.add_entity(entity)
@@ -285,3 +299,9 @@ class World:
 
     def get_entities(self) -> list["organism.Organism"]:
         return self.__entities
+
+    def get_type(self) -> WorldType:
+        return self.__type
+
+    def set_type(self, world_type: WorldType) -> None:
+        self.__type = world_type

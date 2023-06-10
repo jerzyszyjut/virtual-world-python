@@ -140,3 +140,6 @@ class Organism(ABC):
             self._position = PositionHexagon(**data["position"])
         self._alive = data["alive"]
         self._color = data["color"]
+
+    def __str__(self) -> str:
+        return self.__class__.__name__

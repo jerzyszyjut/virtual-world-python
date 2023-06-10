@@ -112,10 +112,10 @@ class Human(Animal):
     _special_ability_active = False
 
     def use_special_ability(self) -> None:
-        self._special_ability_cooldown = Config.HUMAN_ABILITY_COOLDOWN
-        self._special_ability_duration = Config.HUMAN_ABILITY_DURATION
-        self._special_ability_active = True
-        self._world.add_log(f"{self} used special ability")
+        if self._special_ability_cooldown == 0 and not self._special_ability_active:
+            self._special_ability_duration = Config.HUMAN_ABILITY_DURATION
+            self._special_ability_active = True
+            self._world.add_log(f"{self} used special ability")
 
     def action(
         self, direction: Optional[DirectionSquare | DirectionHexagon] = None
@@ -125,10 +125,13 @@ class Human(Animal):
         if self._special_ability_active:
             self._special_ability_duration -= 1
             if self._special_ability_duration == 0:
+                self._special_ability_cooldown = Config.HUMAN_ABILITY_COOLDOWN
                 self._special_ability_active = False
                 self._world.add_log(f"{self} special ability ended")
         else:
             self._special_ability_cooldown -= 1
+            if self._special_ability_cooldown < 0:
+                self._special_ability_cooldown = 0
             if self._special_ability_cooldown == 0:
                 self._world.add_log(f"{self} special ability is ready")
 
@@ -149,6 +152,26 @@ class Human(Animal):
 
     def get_special_ability_active(self) -> bool:
         return self._special_ability_active
+
+    class HumanRepresentation(Organism.OrganismRepresentation):
+        special_ability_cooldown: int
+        special_ability_duration: int
+        special_ability_active: bool
+
+    def __dict__(self) -> HumanRepresentation:  # type: ignore # override
+        data = super().__dict__()
+        data["special_ability_cooldown"] = self._special_ability_cooldown  # type: ignore
+        data["special_ability_duration"] = self._special_ability_duration  # type: ignore
+        data["special_ability_active"] = self._special_ability_active  # type: ignore
+        return data  # type: ignore
+
+    def set_from_dict(
+        self, data: HumanRepresentation | Organism.OrganismRepresentation
+    ) -> None:
+        super().set_from_dict(data)
+        self._special_ability_cooldown = data["special_ability_cooldown"]  # type: ignore
+        self._special_ability_duration = data["special_ability_duration"]  # type: ignore
+        self._special_ability_active = data["special_ability_active"]  # type: ignore
 
 
 class Antelope(Animal):
