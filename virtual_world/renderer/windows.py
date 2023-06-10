@@ -1,5 +1,6 @@
 # mypy: ignore-errors
 import re
+from typing import Tuple
 
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import QRect, QPointF
@@ -10,7 +11,11 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QFileDialog,
+    QLineEdit,
+    QComboBox,
+    QPushButton,
 )
+from PyQt6.QtWidgets import QDialog
 
 import virtual_world.organisms.animals.animals as animals_module
 import virtual_world.organisms.organism as organism_module
@@ -24,14 +29,13 @@ from virtual_world.organisms.position import PositionSquare
 class MainWindow(QWidget):  # type: ignore
     _world: "world_module.World"
 
-    def __init__(
-        self, world: "world_module.World", parent: QWidget | None = None
-    ) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        layout = self._create_layout(world)
+        self._world = world_module.World()
+        layout = self._create_layout(self._world)
         self.setLayout(layout)
         self.setWindowTitle("Virtual World - Jerzy Szyjut 193064")
-        self._world = world
+        WorldDialog(parent=self)
         self.show()
         self.showMaximized()
 
@@ -71,14 +75,26 @@ class MainWindow(QWidget):  # type: ignore
             self._world.next_turn()
             self.update()
         elif a0.key() == QtCore.Qt.Key.Key_S:
-            filename = get_save_file_name() + ".json"
+            filename = self.__get_save_file_name() + ".json"
             if filename:
                 self._world.save(filename)
         elif a0.key() == QtCore.Qt.Key.Key_L:
-            filename = get_load_file_name()
+            filename = self.__get_load_file_name()
             if filename:
                 self._world.load(filename)
                 self.update()
+
+    @staticmethod
+    def __get_save_file_name() -> str:
+        return QFileDialog.getSaveFileName(
+            None, "Save game", "", "Text files (*.json)"
+        )[0]
+
+    @staticmethod
+    def __get_load_file_name() -> str:
+        return QFileDialog.getOpenFileName(
+            None, "Load game", "", "Text files (*.json)"
+        )[0]
 
     def get_possible_keys(self) -> list[int]:
         if self._world.get_type() == world_module.World.WorldType.SQUARE:
@@ -149,9 +165,18 @@ class LegendWidget(QWidget):  # type: ignore
         painter.setFont(QtGui.QFont("Arial", 10))
         painter.drawText(QPointF(100, 20), f"Current turn: {self._world.get_turn()}")
         player = self._world.get_player()
-        painter.drawText(QPointF(100, 40), f"Current player ability cooldown: {player.get_special_ability_cooldown()}")  # type: ignore
-        painter.drawText(QPointF(100, 60), f"Current player ability duration: {player.get_special_ability_duration()}")  # type: ignore
-        painter.drawText(QPointF(100, 80), f"Current player ability active: {player.get_special_ability_active()}")  # type: ignore
+        painter.drawText(
+            QPointF(100, 40),
+            f"Current player ability cooldown: {player.get_special_ability_cooldown()}",
+        )  # type: ignore
+        painter.drawText(
+            QPointF(100, 60),
+            f"Current player ability duration: {player.get_special_ability_duration()}",
+        )  # type: ignore
+        painter.drawText(
+            QPointF(100, 80),
+            f"Current player ability active: {player.get_special_ability_active()}",
+        )  # type: ignore
 
     def _paint_possible_moves(self) -> None:
         moves = [
@@ -235,12 +260,15 @@ class WorldWidget(QWidget):  # type: ignore
         self.setFixedWidth(510)
         self.setFixedHeight(510)
         self._world = world
-        self.unit_size = get_unit_size(self, world.get_width(), world.get_height())
+        self.unit_size = self.__get_unit_size(world.get_width(), world.get_height())
         self.show()
+
+    def __get_unit_size(self, world_width: int, world_height: int) -> tuple[int, int]:
+        return self.width() // world_width, self.height() // world_height
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         for organism_object in self._world.get_entities():
-            paint_organism(self, organism_object)
+            self.__paint_organism(organism_object)
         self.paint_field_borders()
 
     def paint_field_borders(self) -> None:
@@ -255,31 +283,54 @@ class WorldWidget(QWidget):  # type: ignore
                 )
                 painter.drawRect(rectangle)
 
-
-def paint_organism(
-    self: WorldWidget | LegendWidget, organism_object: "organism_module.Organism"
-) -> None:
-    painter = QPainter(self)
-    position = organism_object.get_position()
-    if isinstance(position, PositionSquare):
-        rectangle = QRect(
-            position.get_x() * self.unit_size[0],
-            position.get_y() * self.unit_size[1],
-            self.unit_size[0],
-            self.unit_size[1],
-        )
-        painter.fillRect(rectangle, QColor(*organism_object.get_color()))
+    def __paint_organism(self, organism_object: "organism_module.Organism") -> None:
+        painter = QPainter(self)
+        position = organism_object.get_position()
+        if isinstance(position, PositionSquare):
+            rectangle = QRect(
+                position.get_x() * self.unit_size[0],
+                position.get_y() * self.unit_size[1],
+                self.unit_size[0],
+                self.unit_size[1],
+            )
+            painter.fillRect(rectangle, QColor(*organism_object.get_color()))
 
 
-def get_unit_size(
-    self: QWidget, world_width: int, world_height: int
-) -> tuple[int, int]:
-    return self.width() // world_width, self.height() // world_height
+# Create dialog which will get world height and width, and world type (square or hexagonal) from user
+# Then set world attribute on parent window
+class WorldDialog(QDialog):  # type: ignore
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.parent = parent
+        self.setWindowTitle("World settings")
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.world_width = QLineEdit()
+        self.world_width.setPlaceholderText("World width")
+        self.world_height = QLineEdit()
+        self.world_height.setPlaceholderText("World height")
+        self.world_type = QComboBox()
+        self.world_type.addItems(["Square", "Hexagonal"])
+        self.submit_button = QPushButton("Submit")
+        self.submit_button.clicked.connect(self.submit)
+        self.layout.addWidget(self.world_width)
+        self.layout.addWidget(self.world_height)
+        self.layout.addWidget(self.world_type)
+        self.layout.addWidget(self.submit_button)
+        self.show()
 
-
-def get_save_file_name() -> str:
-    return QFileDialog.getSaveFileName(None, "Save game", "", "Text files (*.json)")[0]
-
-
-def get_load_file_name() -> str:
-    return QFileDialog.getOpenFileName(None, "Load game", "", "Text files (*.json)")[0]
+    def submit(self) -> None:
+        if self.world_width.text() and self.world_height.text():
+            world_width = int(self.world_width.text())
+            world_height = int(self.world_height.text())
+            if self.world_type.currentText() == "Square":
+                self.parent.world = world_module.World(
+                    world_width, world_height, world_module.World.WorldType.SQUARE
+                )
+            elif self.world_type.currentText() == "Hexagonal":
+                self.parent.world = world_module.World(
+                    world_width, world_height, world_module.World.WorldType.HEXAGONAL
+                )
+            else:
+                raise ValueError("Invalid world type")
+            self.close()
