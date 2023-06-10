@@ -1,10 +1,10 @@
 import random
+from typing import Optional
 
 from virtual_world.config import Config
 from virtual_world.organisms.collision_result import CollisionResult
 from virtual_world.organisms.direction import DirectionSquare, DirectionHexagon
 from virtual_world.organisms.organism import Organism
-from typing import Optional
 
 
 class Animal(Organism):

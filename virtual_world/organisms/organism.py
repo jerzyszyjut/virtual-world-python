@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, Tuple, TypedDict, Dict
+from typing import Optional, Tuple, TypedDict
 
 from virtual_world.organisms.collision_result import CollisionResult
 from virtual_world.organisms.direction import (

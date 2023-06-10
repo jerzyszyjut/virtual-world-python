@@ -8,13 +8,12 @@ from PyQt6.QtWidgets import (
     QLabel,
     QWidget,
     QHBoxLayout,
-    QGridLayout,
     QVBoxLayout,
-    QLineEdit,
     QFileDialog,
 )
-import virtual_world.organisms.organism as organism_module
+
 import virtual_world.organisms.animals.animals as animals_module
+import virtual_world.organisms.organism as organism_module
 import virtual_world.organisms.plants.plants as plants_module
 import virtual_world.world as world_module
 from virtual_world.config import Config
