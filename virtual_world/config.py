@@ -48,3 +48,8 @@ class Config:
 
     HUMAN_ABILITY_COOLDOWN: int = 5
     HUMAN_ABILITY_DURATION: int = 5
+
+    HUMAN_DEFAULT_POSITION: Tuple[int, int] = (0, 0)
+
+    SAVE_FILE_NAME: str = "save.json"
+    LOAD_FILE_NAME: str = SAVE_FILE_NAME

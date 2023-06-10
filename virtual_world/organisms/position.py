@@ -1,3 +1,6 @@
+from typing import TypedDict
+
+
 class Position:
     pass
 
@@ -56,6 +59,13 @@ class PositionSquare:
 
     def get_distance(self, position: "PositionSquare") -> int:
         return abs(self.__x - position.get_x()) + abs(self.__y - position.get_y())
+
+    class PositionRepresentation(TypedDict):
+        x: int
+        y: int
+
+    def __dict__(self) -> PositionRepresentation:  # type: ignore # override
+        return {"x": self.__x, "y": self.__y}
 
 
 class PositionHexagon:
@@ -145,3 +155,11 @@ class PositionHexagon:
             abs(self.__r - position.get_r()),
             abs(self.__s - position.get_s()),
         )
+
+    class PositionRepresentation(TypedDict):
+        q: int
+        r: int
+        s: int
+
+    def __dict__(self) -> PositionRepresentation:  # type: ignore # override
+        return {"q": self.__q, "r": self.__r, "s": self.__s}

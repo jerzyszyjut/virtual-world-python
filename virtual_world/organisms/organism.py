@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Tuple, Union, TypedDict
+from typing import Optional, Tuple, TypedDict, Dict
 
 from virtual_world.organisms.collision_result import CollisionResult
 from virtual_world.organisms.direction import (
@@ -10,7 +10,7 @@ from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 
 class Organism(ABC):
-    from virtual_world.world import World
+    import virtual_world.world as world
 
     _strength: int
     _initiative: int
@@ -18,14 +18,18 @@ class Organism(ABC):
     _age: int = 0
     _position: PositionSquare | PositionHexagon
     _alive: bool = True
-    _world: World
+    _world: "world.World"
 
-    def __init__(self, position: PositionSquare | PositionHexagon) -> None:
+    def __init__(
+        self, position: PositionSquare | PositionHexagon = PositionSquare(0, 0)
+    ) -> None:
         self._position = position
         self._alive = True
         self._age = 0
 
-    def action(self, direction: DirectionSquare | DirectionHexagon) -> None:
+    def action(
+        self, direction: Optional[DirectionSquare | DirectionHexagon] = None
+    ) -> None:
         pass
 
     def collision(
@@ -100,34 +104,39 @@ class Organism(ABC):
     def get_color(self) -> Tuple[int, int, int]:
         return self._color
 
-    def set_world(self, world: "World") -> None:
+    def set_world(self, world: "world.World") -> None:
         self._world = world
 
-    def get_world(self) -> "World":
+    def get_world(self) -> "world.World":
         return self._world
 
     class OrganismRepresentation(TypedDict):
         strength: int
         initiative: int
         age: int
-        position: PositionSquare | PositionHexagon
+        position: PositionSquare.PositionRepresentation | PositionHexagon.PositionRepresentation
         alive: bool
         color: Tuple[int, int, int]
+        type: str
 
     def __dict__(self) -> OrganismRepresentation:  # type: ignore # override
         return {
             "strength": self._strength,
             "initiative": self._initiative,
             "age": self._age,
-            "position": self._position,
+            "position": self._position.__dict__(),
             "alive": self._alive,
             "color": self._color,
+            "type": self.__class__.__name__,
         }
 
     def set_from_dict(self, data: OrganismRepresentation) -> None:
         self._strength = data["strength"]
         self._initiative = data["initiative"]
         self._age = data["age"]
-        self._position = data["position"]
+        if len(data["position"]) == 2:
+            self._position = PositionSquare(**data["position"])
+        elif len(data["position"]) == 3:
+            self._position = PositionHexagon(**data["position"])
         self._alive = data["alive"]
         self._color = data["color"]

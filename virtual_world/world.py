@@ -1,3 +1,5 @@
+import json
+import pickle
 import random
 from enum import Enum
 from typing import Optional, Type
@@ -7,11 +9,13 @@ from virtual_world.organisms.direction import (
     DirectionSquare,
     DirectionHexagon,
 )
+from virtual_world.organisms.factory import OrganismFactory
 from virtual_world.organisms.position import PositionSquare, PositionHexagon
 
 
 class World:
     import virtual_world.organisms.organism as organism
+    import virtual_world.organisms.animals.animals as animals
 
     class WorldType(Enum):
         SQUARE = 0
@@ -23,6 +27,7 @@ class World:
     __width: int
     __height: int
     __type: WorldType
+    __player: Optional["animals.Human"] = None
 
     def __init__(
         self,
@@ -30,12 +35,16 @@ class World:
         height: int = Config.WORLD_HEIGHT,
         world_type: WorldType = WorldType.SQUARE,
     ) -> None:
+        from virtual_world.organisms.animals.animals import Human
+
         self.__entities = []
         self.__logs = []
         self.__turn = 0
         self.__width = width
         self.__height = height
         self.__type = world_type
+        self.__player = Human(PositionSquare(*Config.HUMAN_DEFAULT_POSITION))
+        self.add_entity(self.__player)
 
     def add_entity(self, entity: "organism.Organism") -> None:
         if (
@@ -58,8 +67,23 @@ class World:
         return None
 
     def next_turn(self) -> None:
+        from virtual_world.organisms.animals.animals import Human
+
+        __entities_copy = self.__entities.copy()
+        __entities_copy.sort(
+            key=lambda entity_in_loop: (
+                entity_in_loop.get_initiative(),
+                entity_in_loop.get_age(),
+            ),
+            reverse=True,
+        )
+        for entity in __entities_copy:
+            if entity.is_alive() and not isinstance(entity, Human):
+                entity.action()
+            entity.increase_age()
+
+        self.remove_dead_entities()
         self.__turn += 1
-        # TODO: implement
 
     def get_random_direction(self) -> DirectionSquare | DirectionHexagon:
         if self.__type == World.WorldType.SQUARE:
@@ -68,6 +92,9 @@ class World:
             return random.choice(list(DirectionHexagon))
         else:
             raise NotImplementedError
+
+    def remove_dead_entities(self) -> None:
+        self.__entities = [entity for entity in self.__entities if entity.is_alive()]
 
     def get_position_in_direction(
         self,
@@ -105,7 +132,7 @@ class World:
         self, position: PositionSquare | PositionHexagon
     ) -> Optional["organism.Organism"]:
         for entity in self.__entities:
-            if entity.get_position() == position:
+            if entity.is_alive() and entity.get_position() == position:
                 return entity
         return None
 
@@ -201,6 +228,44 @@ class World:
         else:
             raise NotImplementedError
 
+    def __dict__(self) -> dict:  # type: ignore # override
+        from virtual_world.organisms.animals.animals import Human
+
+        return {
+            "turn": self.__turn,
+            "width": self.__width,
+            "height": self.__height,
+            "player": self.__player.__dict__() if self.__player is not None else None,
+            "entities": [
+                entity.__dict__()
+                for entity in self.__entities
+                if not isinstance(entity, Human)
+            ],
+        }
+
+    def save(self, path: str) -> None:
+        with open(path, "w+") as file:
+            json.dump(self.__dict__(), file)
+
+    def load(self, path: str) -> None:
+        from virtual_world.organisms.animals.animals import Human
+
+        with open(path, "r") as file:
+            data = json.load(file)
+            self.__turn = data["turn"]
+            self.__width = data["width"]
+            self.__height = data["height"]
+            if data["player"] is not None:
+                self.__player = Human()
+                self.__player.set_from_dict(data["player"])
+                self.add_entity(self.__player)
+            else:
+                self.__player = None
+            self.__entities = []
+            for entity_data in data["entities"]:
+                entity = OrganismFactory.create(entity_data)
+                self.add_entity(entity)
+
     def get_logs(self) -> list[str]:
         return self.__logs
 
@@ -218,3 +283,6 @@ class World:
 
     def get_height(self) -> int:
         return self.__height
+
+    def get_entities(self) -> list["organism.Organism"]:
+        return self.__entities
