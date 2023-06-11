@@ -100,18 +100,22 @@ class Fox(Animal):
             possible_directions.remove(DirectionSquare.NONE)
         elif isinstance(direction, DirectionHexagon):
             possible_directions.remove(DirectionHexagon.NONE)
-
-        possible_directions = list(
-            filter(
-                lambda d: self._world.get_entity(self._position) is None,
-                possible_directions,
+        possible_directions_filtered = []
+        for possible_direction in possible_directions:
+            new_position = self._world.get_position_in_direction(
+                self._position, possible_direction
             )
-        )
+            if self._world.is_position_in_world(new_position):
+                other_organism = self._world.get_organism_at_position(new_position)
+                if other_organism is None:
+                    possible_directions_filtered.append(possible_direction)
+                elif self.is_stronger(other_organism):
+                    possible_directions_filtered.append(possible_direction)
 
-        if len(possible_directions) == 0:
+        if len(possible_directions_filtered) == 0:
             self._world.add_log(f"There is no place for {self} to move")
         else:
-            super().action(random.choice(possible_directions))
+            super().action(random.choice(possible_directions_filtered))
 
 
 class Human(Animal):
