@@ -14,6 +14,14 @@ class Animal(Organism):
         if direction is None:
             direction = self._world.get_random_direction()
 
+        if isinstance(direction, DirectionSquare) and direction == DirectionSquare.NONE:
+            return
+        if (
+            isinstance(direction, DirectionHexagon)
+            and direction == DirectionHexagon.NONE
+        ):
+            return
+
         new_position = self._world.get_position_in_direction(self._position, direction)
 
         if self._world.is_position_in_world(new_position):

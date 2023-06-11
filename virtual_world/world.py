@@ -65,7 +65,7 @@ class World:
                 return entity
         return None
 
-    def next_turn(self) -> None:
+    def next_turn(self, player_direction: DirectionSquare | DirectionHexagon) -> None:
         from virtual_world.organisms.animals.animals import Human
 
         __entities_copy = self.__entities.copy()
@@ -79,6 +79,8 @@ class World:
         for entity in __entities_copy:
             if entity.is_alive() and not isinstance(entity, Human):
                 entity.action()
+            elif isinstance(entity, Human):
+                entity.action(player_direction)
             entity.increase_age()
 
         self.remove_dead_entities()
@@ -86,11 +88,14 @@ class World:
 
     def get_random_direction(self) -> DirectionSquare | DirectionHexagon:
         if self.__type == World.WorldType.SQUARE:
-            return random.choice(list(DirectionSquare))
+            directions = list(
+                filter(lambda d: d != DirectionSquare.NONE, DirectionSquare)
+            )
         elif self.__type == World.WorldType.HEXAGONAL:
-            return random.choice(list(DirectionHexagon))
+            directions = list(filter(lambda d: d != DirectionHexagon.NONE, DirectionHexagon))  # type: ignore
         else:
             raise NotImplementedError
+        return random.choice(directions)
 
     def remove_dead_entities(self) -> None:
         self.__entities = [entity for entity in self.__entities if entity.is_alive()]
@@ -160,6 +165,9 @@ class World:
                     for choice in choices
                     if self.get_organism_at_position(choice) is None
                 ]
+
+            if len(choices) == 0:
+                return position
 
             return random.choice(choices)
         else:

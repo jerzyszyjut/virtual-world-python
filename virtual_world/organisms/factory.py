@@ -1,12 +1,31 @@
+from typing import Optional
+
+from virtual_world.organisms.position import PositionSquare, PositionHexagon
+
+
 class OrganismFactory:
     import virtual_world.organisms.organism as organism
 
+    @classmethod
+    def create(
+        cls, data: "organism.Organism.OrganismRepresentation"
+    ) -> "organism.Organism":
+        organism_type = data["type"]
+        organism: "organism.Organism" | None = cls.create_base_organism(organism_type)  # type: ignore # name-defined
+
+        if organism is not None:
+            organism.set_from_dict(data)
+            return organism  # type: ignore # no-any-return
+        else:
+            raise ValueError(f"Unknown organism type: {organism_type}")
+
     @staticmethod
-    def create(data: "organism.Organism.OrganismRepresentation") -> "organism.Organism":
+    def create_base_organism(
+        organism_type: str, position: Optional[PositionSquare | PositionHexagon] = None
+    ) -> "organism.Organism":
         from virtual_world.organisms.animals import animals
         from virtual_world.organisms.plants import plants
 
-        organism_type = data["type"]
         organism: "organism.Organism" | None = None  # type: ignore # name-defined
 
         if organism_type == "Wolf":
@@ -34,6 +53,7 @@ class OrganismFactory:
         else:
             raise ValueError(f"Unknown organism type: {organism_type}")
 
-        organism.set_from_dict(data)
+        if position is not None:
+            organism.set_position(position)
 
         return organism

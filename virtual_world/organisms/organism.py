@@ -58,9 +58,9 @@ class Organism(ABC):
 
     def get_possible_directions(self) -> list[DirectionSquare | DirectionHexagon]:
         if self._position.__class__.__name__ == "PositionSquare":
-            return list(DirectionSquare)
+            return list(filter(lambda d: d != DirectionSquare.NONE, DirectionSquare))
         elif self._position.__class__.__name__ == "PositionHexagon":
-            return list(DirectionHexagon)
+            return list(filter(lambda d: d != DirectionHexagon.NONE, DirectionHexagon))
         else:
             raise NotImplementedError
 
