@@ -45,9 +45,13 @@ class World:
         self.__player = Human(PositionSquare(*Config.HUMAN_DEFAULT_POSITION))
         self.add_entity(self.__player)
 
-    def add_entity(self, entity: "organism.Organism") -> None:
+    def add_entity(self, entity: "organism.Organism", force: bool = False) -> None:
+        if force:
+            organism = self.get_entity(entity.get_position())
+            if organism:
+                self.remove_entity(organism)
         if (
-            not self.get_entity(entity.get_position())
+            (not self.get_entity(entity.get_position()) or force)
             and entity.is_alive()
             and (self.is_position_in_world(entity.get_position()))
         ):
@@ -55,6 +59,7 @@ class World:
             self.__entities.append(entity)
 
     def remove_entity(self, entity: "organism.Organism") -> None:
+        entity.die()
         self.__entities.remove(entity)
 
     def get_entity(
@@ -148,7 +153,7 @@ class World:
 
     def get_random_adjacent_position(
         self, position: PositionSquare | PositionHexagon, empty: bool = False
-    ) -> PositionSquare | PositionHexagon:
+    ) -> Optional[PositionSquare | PositionHexagon]:
         if self.__type == World.WorldType.SQUARE and isinstance(
             position, PositionSquare
         ):
@@ -167,7 +172,7 @@ class World:
                 ]
 
             if len(choices) == 0:
-                return position
+                return None
 
             return random.choice(choices)
         else:

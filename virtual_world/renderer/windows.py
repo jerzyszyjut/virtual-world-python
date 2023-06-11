@@ -344,7 +344,7 @@ class WorldWidget(QWidget):  # type: ignore
         organism_dialog.exec()
 
     def add_organism(self, organism: "organism_module.Organism") -> None:
-        self._world.add_entity(organism)
+        self._world.add_entity(organism, force=True)
         self.update()
 
 

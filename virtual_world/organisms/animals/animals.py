@@ -43,11 +43,14 @@ class Animal(Organism):
                         self._world.move_organism(self, new_position)
 
     def reproduce(self, other: "Organism") -> None:
-        self._world.add_log(f"{self} reproduced with {other}")
         new_position = self._world.get_random_adjacent_position(
             self._position, empty=True
         )
-        self._world.add_entity(self.__class__(new_position))
+        if new_position is None:
+            return
+        if self._world.is_position_in_world(new_position):
+            self._world.add_log(f"{self} reproduced with {other}")
+            self._world.add_entity(self.__class__(new_position))
 
 
 class Sheep(Animal):
