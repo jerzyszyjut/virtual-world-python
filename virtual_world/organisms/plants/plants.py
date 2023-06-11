@@ -21,6 +21,7 @@ class Plant(Organism):
                 new_position
             ):
                 self._world.add_entity(self.__class__(new_position))
+                self._world.add_log(f"{self} spread to {new_position}")
 
     def collision(self, other: Organism, is_attacked: bool = False) -> CollisionResult:
         return CollisionResult.DEFEAT

@@ -149,7 +149,8 @@ class World:
         self, organism: "organism.Organism", position: PositionSquare | PositionHexagon
     ) -> None:
         if self.is_position_in_world(position):
-            organism.set_position(position)
+            if self.get_organism_at_position(position) is None:
+                organism.set_position(position)
 
     def get_random_adjacent_position(
         self, position: PositionSquare | PositionHexagon, empty: bool = False

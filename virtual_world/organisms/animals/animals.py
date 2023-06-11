@@ -36,11 +36,16 @@ class Animal(Organism):
                     collision_result = self.collision(other_organism)
                     if collision_result == CollisionResult.VICTORY:
                         self._world.move_organism(self, new_position)
+                        self._world.add_log(f"{self} killed {other_organism}")
                         other_organism.die()
                     elif collision_result == CollisionResult.DEFEAT:
+                        self._world.add_log(f"{self} was killed by {other_organism}")
                         self.die()
                     elif collision_result == CollisionResult.ESCAPE:
+                        self._world.add_log(f"{self} escaped from {other_organism}")
                         self._world.move_organism(self, new_position)
+                    elif collision_result == CollisionResult.TIE:
+                        self._world.add_log(f"{self} tied with {other_organism}")
 
     def reproduce(self, other: "Organism") -> None:
         new_position = self._world.get_random_adjacent_position(
@@ -207,10 +212,11 @@ class Antelope(Animal):
         if escape_position is None:
             return super().collision(other, is_attacked)
 
-        if random.random() < Config.ANTELOPE_ESCAPE_CHANCE:
-            self._world.add_log(f"{self} escaped from {other}")
-            self._world.move_organism(self, escape_position)
-            return CollisionResult.ESCAPE
+        if super().collision(other, is_attacked) == CollisionResult.DEFEAT:
+            if random.random() < Config.ANTELOPE_ESCAPE_CHANCE:
+                self._world.add_log(f"{self} escaped from {other}")
+                self._world.move_organism(self, escape_position)
+                return CollisionResult.ESCAPE
 
         return super().collision(other, is_attacked)
 

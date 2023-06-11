@@ -388,7 +388,6 @@ class WorldDialog(QDialog):  # type: ignore
             self.close()
 
 
-# Create dialog that will allow to choose organism to add to the world
 class OrganismDialog(QDialog):
     def __init__(
         self, parent: QWidget, position: PositionSquare | PositionHexagon

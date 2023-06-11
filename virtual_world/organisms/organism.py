@@ -41,19 +41,10 @@ class Organism(ABC):
                 collision_result.TIE,
                 collision_result.ESCAPE,
             ):
-                if collision_result == collision_result.TIE:  # type: ignore # comparison-overlap
-                    self._world.add_log(f"{self} and {other} tied a fight")
-                elif collision_result == collision_result.ESCAPE:  # type: ignore # comparison-overlap
-                    self._world.add_log(f"{self} escaped from {other}")
                 return collision_result
         if self.is_stronger(other, is_attacked):
-            self._world.add_log(f"{self} killed {other} at {other.get_position()}")
             return CollisionResult.VICTORY
         else:
-            if not is_attacked:
-                self._world.add_log(
-                    f"{other} was killed by {self} at {self.get_position()}"
-                )
             return CollisionResult.DEFEAT
 
     def get_possible_directions(self) -> list[DirectionSquare | DirectionHexagon]:
