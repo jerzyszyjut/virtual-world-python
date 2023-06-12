@@ -53,7 +53,7 @@ class Organism(ABC):
         elif self._position.__class__.__name__ == "PositionHexagon":
             return list(filter(lambda d: d != DirectionHexagon.NONE, DirectionHexagon))
         else:
-            raise NotImplementedError
+            raise ValueError("Unknown position type")
 
     def is_stronger(self, other: "Organism", is_attacked: bool = True) -> bool:
         if is_attacked:

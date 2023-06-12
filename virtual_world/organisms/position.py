@@ -15,7 +15,7 @@ class PositionSquare:
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PositionSquare):
-            return NotImplemented
+            raise ValueError("Cannot compare PositionSquare with other type")
         return self.__x == other.__x and self.__y == other.__y
 
     def __str__(self) -> str:

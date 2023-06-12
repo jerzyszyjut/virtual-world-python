@@ -271,7 +271,7 @@ class LegendWidget(QWidget):  # type: ignore
 
 
 class WorldWidget(QWidget):  # type: ignore
-    unit_size: tuple[int, int]
+    unit_size: tuple[int, int] | tuple[int, int, int]
     _world: "world_module.World"
 
     def __init__(
@@ -288,7 +288,17 @@ class WorldWidget(QWidget):  # type: ignore
         self.show()
 
     def __get_unit_size(self, world_width: int, world_height: int) -> tuple[int, int]:
-        return (self.width() - 10) // world_width, (self.height() - 10) // world_height
+        if self._world.get_type() == world_module.World.WorldType.SQUARE:
+            return (self.width() - 10) // world_width, (
+                self.height() - 10
+            ) // world_height
+        elif self._world.get_type() == world_module.World.WorldType.HEXAGONAL:
+            return (
+                (self.width() - 10) // (world_width + 1),
+                (self.height() - 10) // (world_height + 1),
+            )
+        else:
+            raise ValueError("Invalid world type")
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         for organism_object in self._world.get_entities():
@@ -297,15 +307,35 @@ class WorldWidget(QWidget):  # type: ignore
 
     def paint_field_borders(self) -> None:
         painter = QPainter(self)
-        for i in range(0, self._world.get_width()):
-            for j in range(0, self._world.get_height()):
-                rectangle = QRect(
-                    i * self.unit_size[0],
-                    j * self.unit_size[1],
-                    self.unit_size[0],
-                    self.unit_size[1],
-                )
-                painter.drawRect(rectangle)
+        if self._world.get_type() == world_module.World.WorldType.SQUARE:
+            for i in range(0, self._world.get_width()):
+                for j in range(0, self._world.get_height()):
+                    rectangle = QRect(
+                        i * self.unit_size[0],
+                        j * self.unit_size[1],
+                        self.unit_size[0],
+                        self.unit_size[1],
+                    )
+                    painter.drawRect(rectangle)
+        elif self._world.get_type() == world_module.World.WorldType.HEXAGONAL:
+            for i in range(0, self._world.get_width()):
+                for j in range(0, self._world.get_height()):
+                    if i % 2 == 0:
+                        rectangle = QRect(
+                            i * self.unit_size[0],
+                            j * self.unit_size[1],
+                            self.unit_size[0],
+                            self.unit_size[1],
+                        )
+                        painter.drawRect(rectangle)
+                    else:
+                        rectangle = QRect(
+                            i * self.unit_size[0],
+                            j * self.unit_size[1] + self.unit_size[1] // 2,
+                            self.unit_size[0],
+                            self.unit_size[1],
+                        )
+                        painter.drawRect(rectangle)
 
     def __paint_organism(self, organism_object: "organism_module.Organism") -> None:
         painter = QPainter(self)
@@ -360,7 +390,7 @@ class WorldDialog(QDialog):  # type: ignore
         self.world_height = QLineEdit()
         self.world_height.setPlaceholderText("World height")
         self.world_type = QComboBox()
-        self.world_type.addItems(["Square", "Hexagonal"])
+        self.world_type.addItems(["Square"])
         self.submit_button = QPushButton("Submit")
         self.submit_button.clicked.connect(self.submit)
         self.layout.addWidget(self.world_width)

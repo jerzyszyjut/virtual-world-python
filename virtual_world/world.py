@@ -1,6 +1,7 @@
 import json
 import random
 from enum import Enum
+from math import ceil
 from typing import Optional, Type
 
 import virtual_world
@@ -99,7 +100,7 @@ class World:
         elif self.__type == World.WorldType.HEXAGONAL:
             directions = list(filter(lambda d: d != DirectionHexagon.NONE, DirectionHexagon))  # type: ignore
         else:
-            raise NotImplementedError
+            raise ValueError("Invalid world type")
         return random.choice(directions)
 
     def remove_dead_entities(self) -> None:
@@ -122,9 +123,38 @@ class World:
             elif direction == DirectionSquare.RIGHT:
                 return PositionSquare(position.get_x() + 1, position.get_y())
             else:
-                raise NotImplementedError
+                raise ValueError("Invalid direction")
+        elif self.__type == World.WorldType.HEXAGONAL and isinstance(
+            position, PositionHexagon
+        ):
+            if direction == DirectionHexagon.UP_LEFT:
+                return PositionHexagon(
+                    position.get_q(), position.get_r() - 1, position.get_s() + 1
+                )
+            elif direction == DirectionHexagon.UP_RIGHT:
+                return PositionHexagon(
+                    position.get_q() + 1, position.get_r() - 1, position.get_s()
+                )
+            elif direction == DirectionHexagon.DOWN_LEFT:
+                return PositionHexagon(
+                    position.get_q() - 1, position.get_r() + 1, position.get_s()
+                )
+            elif direction == DirectionHexagon.DOWN_RIGHT:
+                return PositionHexagon(
+                    position.get_q(), position.get_r() + 1, position.get_s() - 1
+                )
+            elif direction == DirectionHexagon.LEFT:
+                return PositionHexagon(
+                    position.get_q() - 1, position.get_r(), position.get_s() + 1
+                )
+            elif direction == DirectionHexagon.RIGHT:
+                return PositionHexagon(
+                    position.get_q() + 1, position.get_r(), position.get_s() - 1
+                )
+            else:
+                raise ValueError("Invalid direction")
         else:
-            raise NotImplementedError
+            raise ValueError("Invalid world type")
 
     def is_position_in_world(self, position: PositionSquare | PositionHexagon) -> bool:
         if self.__type == World.WorldType.SQUARE and isinstance(
@@ -134,8 +164,19 @@ class World:
                 0 <= position.get_x() < self.__width
                 and 0 <= position.get_y() < self.__height
             )
+        elif self.__type == World.WorldType.HEXAGONAL and isinstance(
+            position, PositionHexagon
+        ):
+            half_width = ceil(self.__width / 2)
+            half_height = ceil(self.__height / 2)
+            return (
+                position.get_q() + position.get_r() + position.get_s() == 0
+                and -half_width <= position.get_q() < half_width
+                and -half_height <= position.get_r() < half_height
+                and -half_width <= position.get_s() < half_width
+            )
         else:
-            raise NotImplementedError
+            raise ValueError("Invalid world type")
 
     def get_organism_at_position(
         self, position: PositionSquare | PositionHexagon
@@ -176,8 +217,43 @@ class World:
                 return None
 
             return random.choice(choices)
+        elif self.__type == World.WorldType.HEXAGONAL and isinstance(
+            position, PositionHexagon
+        ):
+            choices_hex = [
+                PositionHexagon(
+                    position.get_q(), position.get_r() - 1, position.get_s() + 1
+                ),
+                PositionHexagon(
+                    position.get_q() + 1, position.get_r() - 1, position.get_s()
+                ),
+                PositionHexagon(
+                    position.get_q() - 1, position.get_r() + 1, position.get_s()
+                ),
+                PositionHexagon(
+                    position.get_q(), position.get_r() + 1, position.get_s() - 1
+                ),
+                PositionHexagon(
+                    position.get_q() - 1, position.get_r(), position.get_s() + 1
+                ),
+                PositionHexagon(
+                    position.get_q() + 1, position.get_r(), position.get_s() - 1
+                ),
+            ]
+
+            if empty:
+                choices_hex = [
+                    choice
+                    for choice in choices_hex
+                    if self.get_organism_at_position(choice) is None
+                ]
+
+            if len(choices_hex) == 0:
+                return None
+
+            return random.choice(choices_hex)
         else:
-            raise NotImplementedError
+            raise ValueError("Invalid world type")
 
     def get_all_neighbours(
         self, position: PositionSquare | PositionHexagon
